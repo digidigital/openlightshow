@@ -2,6 +2,12 @@
 
 A music-reactive lightshow application with 50+ visual effects built with PySide6. Transform your music into stunning visualizations with real-time audio analysis and beat detection.
 
+1. Add a MP3 to your playlist
+2. Generate (a lot of) stage smoke
+3. Point your beamer / projector in the direction of your audience
+4. Start the anmimation
+5. Enjoy! 🙋‍♀️🙌🙋🙌🙋‍♂️
+
 Effect preview on [YouTube](https://youtu.be/jf2aq04m4Lg?si=u18eDf1OWQ_chyb_)
 
 ![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)
