@@ -693,7 +693,18 @@ openlightshow</code></pre>
                         📋 Copy to Clipboard
                     </button>
                 </div>
-                <div class="prompt-text" id="aiPrompt">Create a new lightshow effect for OpenLightShow. The effect should:
+                <div class="prompt-text" id="aiPrompt">Create a new lightshow effect for OpenLightShow.
+OpenLightShow uses a video beamer to simulate a laser show. The application renders all effects on a 2D canvas, but the illusion of real laser beams is created in the physical world by filling the room with stage smoke.
+
+Because of this setup, the application only needs to draw what a laser would project onto a flat surface:
+
+    A 2D line on the canvas becomes a 3D plane in the smoke-filled room.
+
+    A single point on the canvas becomes a visible beam in 3D space.
+
+Your task is to generate a new visual effect by drawing shapes, lines, or points on the 2D canvas that will translate into convincing laser‑like visuals when projected through smoke.
+
+The effect should:
 
 1. Inherit from the Effect base class located at `from ..effect_base import Effect`
 
@@ -731,7 +742,7 @@ class YourEffect(Effect):
         # Draw your effect using QPainter methods
 
     def on_beat(self):
-        # Optional: triggered on detected beats
+        # Optional: triggered on detected beats - (add some ms debounce / cool down)  
         super().on_beat()
 ```
 
