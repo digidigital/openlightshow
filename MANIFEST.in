@@ -1,0 +1,39 @@
+# Include documentation
+include README.md
+include LICENSE
+include Implementation_guide.md
+include QUICK_START.md
+include BUILD_INSTRUCTIONS.md
+include PACKAGE_SUMMARY.md
+
+# Include requirements files
+include requirements.txt
+include requirements-dev.txt
+include requirements-build.txt
+
+# Include all Python files in the package
+recursive-include src/openlightshow *.py
+
+# Include TOML configuration files
+include src/openlightshow/presets.toml
+include src/openlightshow/exclude_list.toml
+
+# Include icons
+include src/openlightshow/icons/*.ico
+include src/openlightshow/icons/*.png
+include src/openlightshow/icons/*.ifg
+
+# Exclude compiled Python files
+global-exclude __pycache__
+global-exclude *.py[co]
+
+# Exclude archive directory
+prune archive
+
+# Exclude website
+prune website
+
+# Exclude build artifacts
+global-exclude *.so
+global-exclude *.dylib
+global-exclude .DS_Store

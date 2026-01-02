@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/favicon.png" type="image/png">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <title>OpenLightShow - Audio-Reactive Lightshow Controller</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-content: rgba(26, 26, 26, 0.95);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --accent: #00ff88;
+            --accent-dim: #00cc6a;
+            --border: #333;
+            --scanner-color: rgba(0, 255, 136, 0.3);
+            --code-bg: #0d0d0d;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f5f5f5;
+            --bg-secondary: #e0e0e0;
+            --bg-content: rgba(255, 255, 255, 0.95);
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --accent: #00aa66;
+            --accent-dim: #008855;
+            --border: #d0d0d0;
+            --scanner-color: rgba(0, 170, 102, 0.2);
+            --code-bg: #f8f8f8;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Animated Scanner Lines Background */
+        .scanner-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .scanner-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                var(--scanner-color) 50%,
+                transparent 100%);
+            box-shadow: 0 0 10px var(--scanner-color);
+            opacity: 0;
+            animation: scan 8s infinite;
+        }
+
+        .scanner-line:nth-child(1) { animation-delay: 0s; }
+        .scanner-line:nth-child(2) { animation-delay: 2s; }
+        .scanner-line:nth-child(3) { animation-delay: 4s; }
+        .scanner-line:nth-child(4) { animation-delay: 6s; }
+
+        .scanner-line-vertical {
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(180deg,
+                transparent 0%,
+                var(--scanner-color) 50%,
+                transparent 100%);
+            box-shadow: 0 0 10px var(--scanner-color);
+            opacity: 0;
+            animation: scanVertical 10s infinite;
+        }
+
+        .scanner-line-vertical:nth-child(5) { animation-delay: 1s; }
+        .scanner-line-vertical:nth-child(6) { animation-delay: 4s; }
+        .scanner-line-vertical:nth-child(7) { animation-delay: 7s; }
+
+        @keyframes scan {
+            0% {
+                top: -10%;
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                top: 110%;
+                opacity: 0;
+            }
+        }
+
+        @keyframes scanVertical {
+            0% {
+                left: -10%;
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                left: 110%;
+                opacity: 0;
+            }
+        }
+
+        /* Layout */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 60px 20px 40px;
+            background: var(--bg-content);
+            border-radius: 20px;
+            margin-bottom: 40px;
+            border: 2px solid var(--border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo {
+            font-size: 3em;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            font-size: 1.3em;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .screenshot {
+            max-width: 95%;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.50);
+        }
+
+        .version {
+            display: inline-block;
+            background: var(--accent);
+            color: var(--bg-primary);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--bg-content);
+            border: 2px solid var(--border);
+            border-radius: 50px;
+            padding: 10px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.05);
+            border-color: var(--accent);
+        }
+
+        /* Content Sections */
+        .section {
+            background: var(--bg-content);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            border: 2px solid var(--border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        h2 {
+            color: var(--accent);
+            font-size: 2em;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: var(--accent-dim);
+            font-size: 1.5em;
+            margin: 30px 0 15px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: var(--bg-secondary);
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+        }
+
+        .feature-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .feature-desc {
+            color: var(--text-secondary);
+            font-size: 0.95em;
+        }
+
+        /* Code Blocks */
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid var(--accent);
+        }
+
+        code {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: var(--accent);
+        }
+
+        .prompt-box {
+            background: var(--bg-secondary);
+            border: 2px solid var(--accent);
+            border-radius: 10px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+
+        .prompt-label {
+            background: var(--accent);
+            color: var(--bg-primary);
+            padding: 5px 15px;
+            border-radius: 5px;
+            display: inline-block;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .prompt-text {
+            background: var(--code-bg);
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            border-left: 4px solid var(--accent);
+        }
+
+        /* Lists */
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+
+        li {
+            margin: 10px 0;
+            color: var(--text-secondary);
+        }
+
+        li strong {
+            color: var(--text-primary);
+        }
+
+        /* Links */
+        a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        a:hover {
+            color: var(--accent-dim);
+            text-decoration: underline;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            background: var(--accent);
+            color: var(--bg-primary);
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: 2px solid var(--accent);
+            margin: 10px 10px 10px 0;
+        }
+
+        .btn:hover {
+            background: transparent;
+            color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--scanner-color);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--accent);
+            border: 2px solid var(--accent);
+        }
+
+        .btn-secondary:hover {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        footer a {
+            margin: 0 10px;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            cursor: pointer;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-content);
+            border: 2px solid var(--accent);
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            cursor: default;
+            box-shadow: 0 16px 64px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            font-size: 1.5em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s;
+        }
+
+        .modal-close:hover {
+            transform: rotate(90deg);
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 2em;
+            }
+
+            .tagline {
+                font-size: 1.1em;
+            }
+
+            .section {
+                padding: 25px;
+            }
+
+            h2 {
+                font-size: 1.5em;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    <!-- Animated Scanner Lines Background -->
+    <div class="scanner-bg">
+        <div class="scanner-line"></div>
+        <div class="scanner-line"></div>
+        <div class="scanner-line"></div>
+        <div class="scanner-line"></div>
+        <div class="scanner-line-vertical"></div>
+        <div class="scanner-line-vertical"></div>
+        <div class="scanner-line-vertical"></div>
+    </div>
+
+    <!-- Theme Toggle -->
+    <div class="theme-toggle" onclick="toggleTheme()">
+        <span id="theme-icon">🌙</span>
+        <span id="theme-text">Dark</span>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">OpenLightShow</div>
+            <div class="tagline">Audio-Reactive Lightshow Controller</div>
+            <div><img class="screenshot" src="./OpenLightShow_Controller_User_Interface_Screenshot.png" alt="OpenLightShow_Controller_User_Interface_Screenshot" /></div>
+            <span class="version">v1.0.0</span>
+        </header>
+
+        <!-- Summary Section -->
+        <section class="section">
+            <h2>🎵 What is OpenLightShow?</h2>
+            <p style="font-size: 1.1em; margin-bottom: 20px;">
+                <strong>OpenLightShow</strong> is a powerful Python-based audio-reactive lightshow controller
+                that turns your music into mesmerizing visual effects. Originally designed for projector shows,
+                it's perfect for parties, events, DJ sets, or creative visual performances.
+            </p>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <div class="feature-title">58+ Visual Effects</div>
+                    <div class="feature-desc">From classic scanners to particle systems, lasers, strobes, and more</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎧</div>
+                    <div class="feature-title">Beat Detection</div>
+                    <div class="feature-desc">Real-time audio analysis with librosa for perfect sync</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-title">Live Preview</div>
+                    <div class="feature-desc">See your effects in real-time with the built-in preview widget</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎛️</div>
+                    <div class="feature-title">Customizable Presets</div>
+                    <div class="feature-desc">Create and save your own effect combinations and settings</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <div class="feature-title">Smart Rotation</div>
+                    <div class="feature-desc">Weighted random selection with conflict prevention</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🖥️</div>
+                    <div class="feature-title">Dual Screen</div>
+                    <div class="feature-desc">Control panel on one screen, fullscreen output on another</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Installation Section -->
+        <section class="section">
+            <h2>📦 Installation</h2>
+
+            <h3>🚀 Easy Install (Recommended)</h3>
+
+            <h4>Windows Users</h4>
+            <p>Download the standalone EXE installer from the <a href="https://github.com/digidigital/openlightshow/releases" target="_blank">GitHub Releases page</a>. No Python installation required!</p>
+            <div style="margin: 20px 0;">
+                <a href="https://github.com/digidigital/openlightshow/releases" class="btn" target="_blank">📥 Download Windows Installer</a>
+            </div>
+
+            <h4>Python Users (All Platforms)</h4>
+            <p>Install directly from PyPI:</p>
+            <pre><code># Install from PyPI
+pip install openlightshow
+
+# Run the application
+openlightshow</code></pre>
+
+            <h3>💻 Development Install</h3>
+            <p>For developers who want to modify the source code:</p>
+            <pre><code># Clone the repository
+git clone https://github.com/digidigital/openlightshow.git
+cd openlightshow
+
+# Create virtual environment (recommended)
+python -m venv venv
+
+# Activate virtual environment
+# On Linux/Mac:
+source venv/bin/activate
+# On Windows:
+venv\Scripts\activate
+
+# Install in development mode
+pip install -e .
+
+# Run the application
+openlightshow</code></pre>
+
+            <h3>📋 Prerequisites</h3>
+            <ul>
+                <li><strong>Windows</strong>: Use the EXE installer (no prerequisites needed)</li>
+                <li><strong>Linux/Mac/Python install</strong>:
+                    <ul>
+                        <li>Python 3.9 or higher</li>
+                        <li>pip (Python package manager)</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>📦 Dependencies</h3>
+            <p>Automatically installed with the package:</p>
+            <ul>
+                <li><strong>PySide6</strong> - Qt framework for GUI</li>
+                <li><strong>numpy</strong> - Numerical computing</li>
+                <li><strong>librosa</strong> - Audio analysis and beat detection</li>
+                <li><strong>soundfile</strong> - Audio file I/O</li>
+            </ul>
+
+            <h3>🎮 First Run</h3>
+            <ol>
+                <li>Launch OpenLightShow (via installer shortcut, <code>openlightshow</code> command, or development run)</li>
+                <li>Click <strong>"Add MP3"</strong> to add your music files</li>
+                <li>Select effects from the list (check the boxes)</li>
+                <li>Adjust weights to control effect frequency</li>
+                <li>Choose a preset or customize settings</li>
+                <li>Hit <strong>"Play"</strong> and enjoy the show!</li>
+            </ol>
+        </section>
+
+        <!-- Usage Section -->
+        <section class="section">
+            <h2>🎮 Usage Guide</h2>
+
+            <h3>Main Controls</h3>
+            <ul>
+                <li><strong>Playlist</strong> - Add/remove MP3/WAV files</li>
+                <li><strong>Transport Controls</strong> - Play, Pause/Resume, Stop</li>
+                <li><strong>Sensitivity</strong> - How reactive effects are to audio (0-100)</li>
+                <li><strong>Brightness</strong> - Overall brightness (10-200)</li>
+                <li><strong>Flash Threshold</strong> - Minimum energy for flash effects (50-100)</li>
+                <li><strong>Effect Period</strong> - How often effects change (seconds)</li>
+                <li><strong>Max Active</strong> - Number of simultaneous effects (1-10)</li>
+                <li><strong>Starfield Spacing</strong> - Spacing for starfield effect (20-200px)</li>
+            </ul>
+
+            <h3>Effects Panel</h3>
+            <p>The effects panel shows all available effects with:</p>
+            <ul>
+                <li><strong>Enable Checkbox</strong> - Check to include in random rotation</li>
+                <li><strong>Weight</strong> - Higher weights = more frequent selection (0-100)</li>
+                <li><strong>Effect Name</strong> - Descriptive name of the effect</li>
+            </ul>
+
+            <h3>Presets</h3>
+            <p>Use the preset dropdown to quickly load pre-configured settings:</p>
+            <ul>
+                <li><strong>All</strong> - All effects enabled with default weights</li>
+                <li><strong>Classic Disco</strong> - Disco balls, derby lights, moving heads</li>
+                <li><strong>Lasershow</strong> - Scanner lines, tunnels, geometric patterns</li>
+                <li><strong>Rave</strong> - High-energy strobes, flashes, and fast effects</li>
+                <li><strong>Mix</strong> - Balanced variety of effect types</li>
+                <li><strong>Particles</strong> - Particle systems and explosions</li>
+                <li><strong>Flashes</strong> - Strobe and flash effects only</li>
+            </ul>
+
+            <h3>Keyboard Shortcuts</h3>
+            <ul>
+                <li><strong>Space</strong> - Play/Pause</li>
+                <li><strong>Esc</strong> - Close fullscreen lightshow (if on primary screen)</li>
+            </ul>
+        </section>
+
+        <!-- Developer Section -->
+        <section class="section">
+            <h2>👨‍💻 Developer Guide</h2>
+
+            <h3>Project Structure</h3>
+            <pre><code>openlightshow/
+├── src/
+│   └── openlightshow/
+│       ├── main.py              # Main application
+│       ├── effect_base.py       # Base effect class
+│       ├── effect_loader.py     # Auto-discovery system
+│       ├── presets.toml         # Preset configurations
+│       ├── exclude_list.toml    # Effect conflict rules
+│       ├── icons/               # Application icons
+│       └── effects/             # Effect modules (58+ effects)
+│           ├── beat_strobe.py
+│           ├── disco_derby.py
+│           ├── starfield.py
+│           └── ...
+├── pyproject.toml               # Package configuration
+└── README.md                    # Documentation</code></pre>
+
+            <h3>Architecture</h3>
+            <ul>
+                <li><strong>Effect System</strong> - Plugin-based architecture with auto-discovery</li>
+                <li><strong>Audio Analysis</strong> - Beat detection and frequency band energy tracking</li>
+                <li><strong>Lightshow Widget</strong> - QPainter-based rendering on separate window</li>
+                <li><strong>Preview Widget</strong> - Real-time miniature preview in control panel</li>
+                <li><strong>Settings Persistence</strong> - QSettings for auto-save/load</li>
+                <li><strong>Preset System</strong> - TOML-based configuration files</li>
+            </ul>
+
+            <h3>Creating Custom Effects</h3>
+            <p>All effects inherit from the <code>Effect</code> base class and are automatically discovered by the loader. Copy the prompt below and paste it into your AI assistant with your effect idea!</p>
+
+            <div class="prompt-box">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <div class="prompt-label">🤖 AI Prompt for Creating New Effects</div>
+                    <button onclick="copyPromptToClipboard()" style="background: var(--accent); color: var(--bg-primary); border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: all 0.3s;">
+                        📋 Copy to Clipboard
+                    </button>
+                </div>
+                <div class="prompt-text" id="aiPrompt">Create a new lightshow effect for OpenLightShow. The effect should:
+
+1. Inherit from the Effect base class located at `from ..effect_base import Effect`
+
+2. Follow this structure using the Effect base class:
+
+```python
+from PySide6.QtCore import QSize
+from PySide6.QtGui import QPainter, QColor
+from ..effect_base import Effect
+
+class YourEffect(Effect):
+    """Base class for all lightshow effects."""
+    name: str = "Your Effect Name"
+    effect_class: str = "unique_class"
+
+    def __init__(self, size: QSize):
+        super().__init__(size)
+        self.size = size
+        # Initialize your effect state here
+
+    def resize(self, size: QSize):
+        super().resize(size)
+        self.size = size
+        # Recalculate positions/sizes
+
+    def update(self, dt_ms: int, energies: dict,
+               sensitivity: float, flash_thresh: float):
+        # energies: {'low': 0.0-1.0, 'mid': 0.0-1.0, 'high': 0.0-1.0}
+        # sensitivity: 0.0-1.0 (how reactive to audio)
+        # flash_thresh: 0.0-1.0 (minimum energy for flashes)
+        # Update animation state based on time and audio
+
+    def paint(self, painter: QPainter, brightness: float):
+        # brightness: 0.1-2.0 (overall brightness multiplier)
+        # Draw your effect using QPainter methods
+
+    def on_beat(self):
+        # Optional: triggered on detected beats
+        super().on_beat()
+```
+
+3. The effect should be visually interesting and react to audio:
+   - Use energies['low'], energies['mid'], energies['high'] for frequency-based reactions
+   - Use sensitivity to scale reactiveness (0.0 to 1.0)
+   - Use flash_thresh for triggering flash effects (0.0 to 1.0)
+   - Use brightness to scale color intensity (0.1 to 2.0)
+
+4. Use QPainter methods for drawing:
+   - painter.drawLine(x1, y1, x2, y2)
+   - painter.drawRect(x, y, width, height)
+   - painter.drawEllipse(x, y, width, height)
+   - painter.drawPolygon(points)
+   - Use QColor with RGB or HSV: QColor(r, g, b) or QColor.fromHsvF(h, s, v)
+   - Apply antialiasing: painter.setRenderHint(QPainter.Antialiasing)
+   - Remember to use painter.save() and painter.restore() to preserve state
+
+5. Save the effect in `src/openlightshow/effects/your_effect_name.py`
+
+6. The effect will be automatically discovered and loaded by the application!
+
+Example effect idea: [describe your effect here, e.g., "rotating laser beams that pulse with the beat", "particle explosion system", "geometric tunnel effect"]
+
+Make it visually stunning and reactive to music!</div>
+            </div>
+
+            <h3>Effect Base Class Reference</h3>
+            <p style="color: var(--text-secondary); font-style: italic;">The base class is included in the AI prompt above for easy copy-paste!</p>
+            <pre><code>class Effect:
+    """Base class for all lightshow effects."""
+    name: str = "Effect Name"
+    effect_class: str = "unique_class"
+
+    def __init__(self, size: QSize):
+        self.size = size
+        # Initialize your effect state here
+
+    def resize(self, size: QSize):
+        self.size = size
+        # Recalculate positions/sizes
+
+    def update(self, dt_ms: int, energies: dict,
+               sensitivity: float, flash_thresh: float):
+        # energies: {'low': 0.0-1.0, 'mid': 0.0-1.0, 'high': 0.0-1.0}
+        # Update animation state
+
+    def paint(self, painter: QPainter, brightness: float):
+        # Draw your effect using QPainter
+
+    def on_beat(self):
+        # Optional: triggered on detected beats</code></pre>
+
+            <h3>Contributing</h3>
+            <ol>
+                <li>Fork the repository</li>
+                <li>Create a feature branch: <code>git checkout -b feature/amazing-effect</code></li>
+                <li>Create your effect in <code>src/openlightshow/effects/</code></li>
+                <li>Test it in the application</li>
+                <li>Commit your changes: <code>git commit -m 'Add amazing effect'</code></li>
+                <li>Push to the branch: <code>git push origin feature/amazing-effect</code></li>
+                <li>Submit a pull request</li>
+            </ol>
+
+            <h3>Development Tips</h3>
+            <ul>
+                <li>Use <strong>numpy</strong> for efficient array operations</li>
+                <li>Cache expensive calculations in <code>resize()</code></li>
+                <li>Keep <code>paint()</code> fast - it runs at 60 FPS</li>
+                <li>Use <code>effect_class</code> to group similar effects (prevents conflicts)</li>
+                <li>Test with different audio types (bass-heavy, vocal, instrumental)</li>
+                <li>Check the <code>exclude_list.toml</code> if effects shouldn't play together</li>
+            </ul>
+        </section>
+
+        <!-- Configuration Section -->
+        <section class="section">
+            <h2>⚙️ Configuration Files</h2>
+
+            <h3>presets.toml</h3>
+            <p>Define custom presets with effect selections and weights:</p>
+            <pre><code>["My Custom Preset"]
+sensitivity = 80
+brightness = 120
+flash_threshold = 85
+effect_period = 12.0
+star_spacing = 50
+max_active = 3
+effects = [
+    "Effect Name 1",
+    "Effect Name 2",
+    "Effect Name 3"
+]
+
+["My Custom Preset".effect_weights]
+"Effect Name 1" = 50
+"Effect Name 2" = 30
+"Effect Name 3" = 20</code></pre>
+
+            <h3>exclude_list.toml</h3>
+            <p>Define groups of effects that shouldn't play together:</p>
+            <pre><code>my_conflict_group = [
+    "Effect A",
+    "Effect B",
+    "Effect C"
+]</code></pre>
+        </section>
+
+        <!-- Features Section -->
+        <section class="section">
+            <h2>✨ Key Features</h2>
+            <ul>
+                <li><strong>Real-time audio analysis</strong> using librosa beat detection and frequency band extraction</li>
+                <li><strong>58+ built-in effects</strong> including scanners, strobes, particles, tunnels, and more</li>
+                <li><strong>Smart effect rotation</strong> with weighted random selection and conflict prevention</li>
+                <li><strong>Dual-screen support</strong> - control panel on primary, fullscreen output on secondary</li>
+                <li><strong>Live preview widget</strong> - see effects in real-time without switching screens</li>
+                <li><strong>Preset system</strong> with customizable TOML configurations</li>
+                <li><strong>Exclude list</strong> to prevent conflicting effects from playing together</li>
+                <li><strong>Persistent settings</strong> - all UI state auto-saved and restored</li>
+                <li><strong>Effect weights</strong> - control selection probability per effect</li>
+                <li><strong>Plugin architecture</strong> - effects auto-discovered, easy to add new ones</li>
+                <li><strong>Beat-reactive</strong> - effects respond to music beats and energy</li>
+                <li><strong>Customizable parameters</strong> - sensitivity, brightness, flash threshold, rotation speed</li>
+            </ul>
+        </section>
+
+        <!-- License Section -->
+        <section class="section">
+            <h2>📄 License & Credits</h2>
+            <p>OpenLightShow is open source software. Check the LICENSE file in the repository for details.</p>
+
+            <h3>Built With</h3>
+            <ul>
+                <li><strong>PySide6</strong> - Python bindings for Qt</li>
+                <li><strong>librosa</strong> - Audio analysis library</li>
+                <li><strong>NumPy</strong> - Numerical computing</li>
+                <li><strong>Python</strong> - Programming language</li>
+            </ul>
+
+            <div style="margin-top: 30px;">
+                <a href="https://github.com/digidigital/openlightshow" class="btn">View on GitHub</a>
+                <a href="https://github.com/digidigital/openlightshow/issues" class="btn btn-secondary">Report Issue</a>
+                <a href="https://github.com/digidigital/openlightshow/releases" class="btn btn-secondary">Download</a>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>Made with ❤️ for the lightshow community</p>
+        <p>OpenLightShow v1.0.0 | 2026</p>
+        <p>
+            <a href="#" onclick="openModal(event)">Legal Notice / Imprint</a>
+        </p>
+    </footer>
+
+    <!-- Legal/Imprint Modal -->
+    <div class="modal-overlay" id="legalModal" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <h2>Legal Notice / Imprint</h2>
+
+            <h3>Information according to § 5 TMG</h3>
+            <p>
+                <strong>OpenLightShow Project</strong><br>
+                Open Source Community Project<br>
+                Contact: Björn Seipel<br>
+                Email: support﹫digidigital.de<br>
+                Website: https://github.com/digidigital/openlightshow
+            </p>
+
+            <h3>Responsible for Content</h3>
+            <p>
+                Björn Seipel<br>
+                Dornbachstr. 102<br>
+                61440 Oberursel<br>
+                Germany
+            </p>
+
+            <h3>Privacy & Data Protection</h3>
+            <p>
+                This website does not collect, store, or process any personal data. We do not use cookies,
+                tracking, analytics, or any other data collection mechanisms. Your visit to this website
+                is completely anonymous and leaves no permanent digital footprint on our servers.
+                Server logs are used only for administration and deleted after one month; they include IP address, 
+                date/time, requested file (name/URL), data volume, success message, browser/OS identifier, and, 
+                if applicable, the referrer. Support requests by e‑mail are used solely to answer your inquiry.
+            </p>
+
+            <h3>Theme Preference</h3>
+            <p>
+                The light/dark theme preference is detected from your browser/system settings and is not
+                stored on our servers or in your browser's local storage. The theme resets to system
+                preference on each visit.
+            </p>
+
+            <h3>External Links</h3>
+            <p>
+                This website may contain links to external websites. We have no influence on the content
+                of these websites and accept no liability for them. The operators of the linked websites
+                are solely responsible for their content.
+            </p>
+
+            <h3>Copyright & License</h3>
+            <p>
+                OpenLightShow is open source software. The content of this website and the software are
+                provided under the terms specified in the LICENSE file in the repository. All trademarks,
+                logos, and brand names are the property of their respective owners.
+            </p>
+
+            <h3>Disclaimer</h3>
+            <p>
+                This software is provided "as is" without warranty of any kind, express or implied.
+                The authors or copyright holders shall not be liable for any claim, damages, or other
+                liability arising from the use of this software.
+            </p>
+
+            <h3>Contact</h3>
+            <p>
+                For questions, suggestions, or issues regarding OpenLightShow, please visit our
+                GitHub repository or contact us via email at the address provided above.
+            </p>
+
+            <p style="margin-top: 30px; text-align: center;">
+                <em>Last updated: 2026</em>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Modal Functions
+        function openModal(event) {
+            event.preventDefault();
+            document.getElementById('legalModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('legalModal').classList.remove('active');
+        }
+
+        // Copy AI Prompt to Clipboard
+        function copyPromptToClipboard() {
+            const promptText = document.getElementById('aiPrompt').textContent;
+            navigator.clipboard.writeText(promptText).then(() => {
+                // Visual feedback
+                const button = event.target;
+                const originalText = button.innerHTML;
+                button.innerHTML = '✓ Copied!';
+                button.style.background = 'var(--accent-dim)';
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.style.background = 'var(--accent)';
+                }, 2000);
+            }).catch(err => {
+                alert('Failed to copy to clipboard. Please copy manually.');
+                console.error('Clipboard error:', err);
+            });
+        }
+
+        // Theme Toggle (session-only, no storage)
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('theme-icon');
+            const themeText = document.getElementById('theme-text');
+            const currentTheme = body.getAttribute('data-theme');
+
+            if (currentTheme === 'dark') {
+                body.setAttribute('data-theme', 'light');
+                themeIcon.textContent = '☀️';
+                themeText.textContent = 'Light';
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                themeIcon.textContent = '🌙';
+                themeText.textContent = 'Dark';
+            }
+        }
+
+        // Detect system/browser preference (no storage)
+        window.addEventListener('DOMContentLoaded', () => {
+            const body = document.body;
+            const themeIcon = document.getElementById('theme-icon');
+            const themeText = document.getElementById('theme-text');
+
+            // Always detect system preference (no localStorage)
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const systemTheme = prefersDark ? 'dark' : 'light';
+
+            // Default to dark if no system preference
+            const theme = systemTheme || 'dark';
+
+            body.setAttribute('data-theme', theme);
+            if (theme === 'light') {
+                themeIcon.textContent = '☀️';
+                themeText.textContent = 'Light';
+            } else {
+                themeIcon.textContent = '🌙';
+                themeText.textContent = 'Dark';
+            }
+
+            // Listen for system theme changes and auto-switch
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                const newTheme = e.matches ? 'dark' : 'light';
+                body.setAttribute('data-theme', newTheme);
+                if (newTheme === 'light') {
+                    themeIcon.textContent = '☀️';
+                    themeText.textContent = 'Light';
+                } else {
+                    themeIcon.textContent = '🌙';
+                    themeText.textContent = 'Dark';
+                }
+            });
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

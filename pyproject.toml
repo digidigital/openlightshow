@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openlightshow"
+version = "1.0.0"
+description = "A music-reactive lightshow application with 50+ visual effects"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    {name = "Björn Seipel", email = "support@digidigital.de"}
+]
+keywords = ["music", "visualization", "lightshow", "audio-reactive", "effects", "PySide6"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "Topic :: Multimedia :: Sound/Audio :: Analysis",
+    "Topic :: Multimedia :: Graphics",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Environment :: X11 Applications :: Qt",
+]
+
+dependencies = [
+    "PySide6>=6.5.0",
+    "numpy>=1.24.0",
+    "librosa>=0.10.0",
+    "soundfile>=0.12.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+]
+
+[project.scripts]
+openlightshow = "openlightshow.main:main"
+
+[project.urls]
+Homepage = "https://openlightshow.digidigital.de"
+Documentation = "https://github.com/digidigital/openlightshow/blob/main/README.md"
+Repository = "https://github.com/digidigital/openlightshow"
+Issues = "https://github.com/digidigital/openlightshow/issues"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+openlightshow = [
+    "effects/*.py",
+    "presets.toml",
+    "exclude_list.toml",
+    "icons/*.ico",
+    "icons/*.png",
+    "icons/*.ifg"
+]

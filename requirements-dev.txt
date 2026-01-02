@@ -1,0 +1,31 @@
+# Development Requirements for OpenLightShow
+# Use this file for development environment setup
+# Install with: pip install -r requirements-dev.txt
+
+# Include all runtime requirements
+-r requirements.txt
+
+# Testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-qt>=4.2.0
+
+# Code Quality
+black>=23.0.0
+flake8>=6.0.0
+pylint>=2.17.0
+mypy>=1.0.0
+
+# Documentation
+sphinx>=5.0.0
+sphinx-rtd-theme>=1.2.0
+
+# Build Tools
+setuptools>=61.0
+wheel>=0.40.0
+build>=0.10.0
+twine>=4.0.0
+
+# Development Utilities
+ipython>=8.0.0
+ipdb>=0.13.0

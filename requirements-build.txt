@@ -1,0 +1,18 @@
+# Build Requirements for OpenLightShow
+# Use this file when building executables with PyInstaller
+# Install with: pip install -r requirements-build.txt
+
+# Include all runtime requirements
+-r requirements.txt
+
+# PyInstaller for building executables
+pyinstaller>=5.13.0
+
+# Additional build tools
+setuptools>=61.0
+wheel>=0.40.0
+build>=0.10.0
+
+# Optional: For creating installers
+# Uncomment as needed:
+# pyinstaller-versionfile>=2.1.0  # For generating Windows version info
