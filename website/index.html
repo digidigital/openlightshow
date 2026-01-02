@@ -488,8 +488,8 @@
         <!-- Header -->
         <header>
             <div class="logo">OpenLightShow</div>
-            <div class="tagline">Audio-Reactive Lightshow Controller</div>
-            <div><img class="screenshot" src="./OpenLightShow_Controller_User_Interface_Screenshot.png" alt="OpenLightShow_Controller_User_Interface_Screenshot" /></div>
+            <div class="tagline">Audio-Reactive Lightshow Controller - Preview on <a href="https://youtu.be/jf2aq04m4Lg?si=u18eDf1OWQ_chyb_" target="_blank">YouTube</a></div>
+            <div><a href="https://youtu.be/jf2aq04m4Lg?si=u18eDf1OWQ_chyb_" target="_blank"><img class="screenshot" src="./OpenLightShow_Controller_User_Interface_Screenshot.png" alt="OpenLightShow_Controller_User_Interface_Screenshot" /></a></div>
             <span class="version">v1.0.0</span>
         </header>
 
@@ -862,15 +862,94 @@ effects = [
         <!-- License Section -->
         <section class="section">
             <h2>📄 License & Credits</h2>
-            <p>OpenLightShow is open source software. Check the LICENSE file in the repository for details.</p>
 
-            <h3>Built With</h3>
+            <h3>OpenLightShow License</h3>
+            <p>OpenLightShow is released under the <strong>MIT License</strong>.</p>
+            <p>
+                <a href="https://github.com/digidigital/openlightshow/blob/main/LICENSE" target="_blank" style="color: var(--accent);">View Full License Text</a> |
+                <a href="https://github.com/digidigital/openlightshow" target="_blank" style="color: var(--accent);">Project Homepage</a>
+            </p>
+
+            <h3>Third-Party Licenses</h3>
+            <p>OpenLightShow is built using the following open-source libraries. We gratefully acknowledge their contributions:</p>
+
+            <div style="margin: 20px 0;">
+                <h4 style="color: var(--accent); margin-top: 20px;">Core Framework</h4>
+                <ul style="list-style-type: none; padding-left: 0;">
+                    <li style="margin: 10px 0;">
+                        <strong>PySide6</strong> - Python bindings for the Qt framework<br>
+                        <span style="color: var(--text-secondary);">License: LGPL v3</span><br>
+                        <a href="https://www.qt.io/qt-for-python" target="_blank" style="color: var(--accent);">Homepage</a> |
+                        <a href="https://doc.qt.io/qtforpython-6/licenses.html" target="_blank" style="color: var(--accent);">License</a>
+                    </li>
+                </ul>
+
+                <h4 style="color: var(--accent); margin-top: 20px;">Audio Processing</h4>
+                <ul style="list-style-type: none; padding-left: 0;">
+                    <li style="margin: 10px 0;">
+                        <strong>librosa</strong> - Audio and music analysis library<br>
+                        <span style="color: var(--text-secondary);">License: ISC License</span><br>
+                        <a href="https://librosa.org/" target="_blank" style="color: var(--accent);">Homepage</a> |
+                        <a href="https://github.com/librosa/librosa/blob/main/LICENSE.md" target="_blank" style="color: var(--accent);">License</a>
+                    </li>
+                    <li style="margin: 10px 0;">
+                        <strong>soundfile</strong> - Audio file I/O based on libsndfile<br>
+                        <span style="color: var(--text-secondary);">License: BSD 3-Clause License</span><br>
+                        <a href="https://github.com/bastibe/python-soundfile" target="_blank" style="color: var(--accent);">Homepage</a> |
+                        <a href="https://github.com/bastibe/python-soundfile/blob/master/LICENSE" target="_blank" style="color: var(--accent);">License</a>
+                    </li>
+                </ul>
+
+                <h4 style="color: var(--accent); margin-top: 20px;">Scientific Computing</h4>
+                <ul style="list-style-type: none; padding-left: 0;">
+                    <li style="margin: 10px 0;">
+                        <strong>NumPy</strong> - Fundamental package for scientific computing<br>
+                        <span style="color: var(--text-secondary);">License: BSD 3-Clause License</span><br>
+                        <a href="https://numpy.org/" target="_blank" style="color: var(--accent);">Homepage</a> |
+                        <a href="https://github.com/numpy/numpy/blob/main/LICENSE.txt" target="_blank" style="color: var(--accent);">License</a>
+                    </li>
+                    <li style="margin: 10px 0;">
+                        <strong>SciPy</strong> - Scientific computing and technical computing<br>
+                        <span style="color: var(--text-secondary);">License: BSD 3-Clause License</span><br>
+                        <a href="https://scipy.org/" target="_blank" style="color: var(--accent);">Homepage</a> |
+                        <a href="https://github.com/scipy/scipy/blob/main/LICENSE.txt" target="_blank" style="color: var(--accent);">License</a>
+                    </li>
+                    <li style="margin: 10px 0;">
+                        <strong>scikit-learn</strong> - Machine learning library (used by librosa)<br>
+                        <span style="color: var(--text-secondary);">License: BSD 3-Clause License</span><br>
+                        <a href="https://scikit-learn.org/" target="_blank" style="color: var(--accent);">Homepage</a> |
+                        <a href="https://github.com/scikit-learn/scikit-learn/blob/main/COPYING" target="_blank" style="color: var(--accent);">License</a>
+                    </li>
+                </ul>
+
+                <h4 style="color: var(--accent); margin-top: 20px;">Additional Dependencies</h4>
+                <ul style="list-style-type: none; padding-left: 0;">
+                    <li style="margin: 10px 0;">
+                        <strong>Numba</strong> - JIT compiler for Python (used by librosa)<br>
+                        <span style="color: var(--text-secondary);">License: BSD 2-Clause License</span><br>
+                        <a href="https://numba.pydata.org/" target="_blank" style="color: var(--accent);">Homepage</a> |
+                        <a href="https://github.com/numba/numba/blob/main/LICENSE" target="_blank" style="color: var(--accent);">License</a>
+                    </li>
+                    <li style="margin: 10px 0;">
+                        <strong>audioread</strong> - Cross-library audio decoding<br>
+                        <span style="color: var(--text-secondary);">License: MIT License</span><br>
+                        <a href="https://github.com/beetbox/audioread" target="_blank" style="color: var(--accent);">Homepage</a> |
+                        <a href="https://github.com/beetbox/audioread/blob/master/MIT-LICENSE" target="_blank" style="color: var(--accent);">License</a>
+                    </li>
+                </ul>
+            </div>
+
+            <h3>License Compatibility</h3>
+            <p>All third-party libraries used in OpenLightShow are licensed under permissive open-source licenses (MIT, BSD, ISC, LGPL) that are compatible with OpenLightShow's MIT license. These licenses allow:</p>
             <ul>
-                <li><strong>PySide6</strong> - Python bindings for Qt</li>
-                <li><strong>librosa</strong> - Audio analysis library</li>
-                <li><strong>NumPy</strong> - Numerical computing</li>
-                <li><strong>Python</strong> - Programming language</li>
+                <li>✅ Commercial use</li>
+                <li>✅ Modification and distribution</li>
+                <li>✅ Private use</li>
+                <li>✅ Patent use (where applicable)</li>
             </ul>
+
+            <h3>Acknowledgments</h3>
+            <p>We are grateful to the open-source community and the developers of these excellent libraries. Without their work, OpenLightShow would not be possible.</p>
 
             <div style="margin-top: 30px;">
                 <a href="https://github.com/digidigital/openlightshow" class="btn">View on GitHub</a>
