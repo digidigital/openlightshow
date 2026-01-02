@@ -1,0 +1,332 @@
+# OpenLightShow Presets Configuration
+# Each preset defines settings and selected effects for different moods/scenarios
+
+[All]
+sensitivity = 70
+brightness = 100
+flash_threshold = 85
+effect_period = 8.0
+star_spacing = 50
+max_active = 3
+effects = []  # Empty list means all effects enabled
+
+["Classic Disco"]
+sensitivity = 70
+brightness = 100
+flash_threshold = 85
+effect_period = 16.0
+star_spacing = 70
+max_active = 2
+effects = [
+    "BulletHoles",
+    "Classic horizontal scan line",
+    "ColorfulScanner",
+    "ColorfulTube",
+    "Dancing Gobo",
+    "DerbyLights",
+    "DiscoBall",
+    "Disco Derby",
+    "FlashyDots",
+    "FlashyHoles",
+    "Moonflower",
+    "MovingGobos",
+    "MovingHeads",
+    "Plasma Field",
+    "Starfield",
+    "Swipe Tunnels",
+]
+
+["Classic Disco".effect_weights]
+"DiscoBall" = 10
+"Disco Derby" = 30
+"DerbyLights" = 40
+"MovingHeads" = 20
+"Moonflower" = 25
+"MovingGobos" = 20
+"Dancing Gobo" = 25
+"Starfield" = 10
+"ColorfulScanner" = 25
+"ColorfulTube" = 22
+"Classic horizontal scan line" = 15
+"FlashyDots" = 15
+"FlashyHoles" = 15
+"BulletHoles" = 10
+"Plasma Field" = 25
+"Swipe Tunnels" = 5
+
+[Lasershow]
+sensitivity = 80
+brightness = 110
+flash_threshold = 80
+effect_period = 16.0
+star_spacing = 45
+max_active = 3
+effects = [
+    "Boxy sensation",
+    "Breathing Grid",
+    "BulletHoles",
+    "Circle Constellations",
+    "Circle tunnel",
+    "Classic horizontal scan line",
+    "ColorfulTube",
+    "Double horizontal scan lines",
+    "Double vertical scan lines",
+    "Duo triangles",
+    "Duo tunnel",
+    "FireflySwarm",
+    "Flowers",
+    "Frequency Mandala",
+    "Hex Tunnel",
+    "Kaleidoscope",
+    "Laser Planets",
+    "PixelRain",
+    "Point cloud lasers",
+    "Quadro Shapes",
+    "Radar sweep",
+    "Rotating Laser Dots",
+    "Scanner lines",
+    "Scanner windmill",
+    "Screen X",
+    "Sine wave",
+    "Starfield",
+    "Stepping scanner",
+    "Swipe Tunnels",
+    "WaterRipples",
+    "WavefrontScanner",
+    "Waving Line",
+    "XRotator",
+    "Zebra Crossing"
+]
+
+[Lasershow.effect_weights]
+"Radar sweep" = 10
+"Scanner windmill" = 10
+"Scanner lines" = 10
+"Classic horizontal scan line" = 10
+"Double horizontal scan lines" = 10
+"Double vertical scan lines" = 10
+"Stepping scanner" = 10
+"WavefrontScanner" = 10
+"Point cloud lasers" = 10
+"Rotating Laser Dots" = 10
+"Boxy sensation" = 10
+"Breathing Grid" = 10
+"Screen X" = 10
+"XRotator" = 10
+"Kaleidoscope" = 10
+"Frequency Mandala" = 10
+"Sine wave" = 10
+"Waving Line" = 10
+"Circle tunnel" = 10
+"Duo tunnel" = 10
+"Hex Tunnel" = 10
+"Swipe Tunnels" = 10
+"Duo triangles" = 10
+"Quadro Shapes" = 10
+"Circle Constellations" = 10
+"Laser Planets" = 10
+"Flowers" = 10
+"Starfield" = 10
+"PixelRain" = 10
+"WaterRipples" = 10
+"FireflySwarm" = 10
+"BulletHoles" = 10
+"ColorfulTube" = 10
+"Zebra Crossing" = 10
+
+[Rave]
+sensitivity = 200
+brightness = 200
+flash_threshold = 75
+effect_period = 8.0
+star_spacing = 40
+max_active = 4
+effects = [
+    "Beat Strobe",
+    "Breathing Grid",
+    "Classic horizontal scan line",
+    "Corner Burst",
+    "Double horizontal scan lines",
+    "Double vertical scan lines",
+    "Duo tunnel",
+    "Electric Arc",
+    "Flash",
+    "Flash wipe",
+    "Flash wipe 2",
+    "FlashyDots",
+    "FlashyHoles",
+    "Flowers",
+    "Frequency Mandala",
+    "Orbital Rings",
+    "PixelRain",
+    "Point cloud lasers",
+    "Rectangular tunnel",
+    "Scanner lines",
+    "Scanner windmill",
+    "Screen X",
+    "Sine wave",
+    "Starfield",
+    "Stepping scanner",
+    "Wild Shot",
+    "XRotator",
+]
+
+[Rave.effect_weights]
+"Beat Strobe" = 50
+"Flash" = 100
+"Flash wipe" = 100
+"Flash wipe 2" = 100
+"FlashyDots" = 10
+"FlashyHoles" = 10
+"Corner Burst" = 25
+"Electric Arc" = 20
+"Wild Shot" = 30
+"Breathing Grid" = 10
+"Scanner lines" = 40
+"Scanner windmill" = 30
+"Classic horizontal scan line" = 10
+"Double horizontal scan lines" = 10
+"Double vertical scan lines" = 10
+"Stepping scanner" = 10
+"Screen X" = 30
+"XRotator" = 30
+"Frequency Mandala" = 30
+"Sine wave" = 10
+"Duo tunnel" = 10
+"Rectangular tunnel" = 10
+"Orbital Rings" = 10
+"Flowers" = 10
+"Starfield" = 10
+"PixelRain" = 10
+"Point cloud lasers" = 10
+
+[Mix]
+sensitivity = 60
+brightness = 90
+flash_threshold = 90
+effect_period = 8.0
+star_spacing = 55
+max_active = 2
+effects = [
+    "Boxy sensation",
+    "Circle tunnel",
+    "Classic horizontal scan line",
+    "ColorfulTube",
+    "Dancing Gobo",
+    "Double vertical scan lines",
+    "Duo triangles",
+    "Duo tunnel",
+    "Electric Arc",
+    "FireflySwarm",
+    "Flash",
+    "Flash wipe",
+    "Flash wipe 2",
+    "Hex Tunnel",
+    "Kaleidoscope",
+    "Laser Planets",
+    "Moonflower",
+    "MovingHeads",
+    "Orbital Rings",
+    "Orbiting Satellites",
+    "Pixel Explosion",
+    "Quadro Shapes",
+    "Radar sweep",
+    "Rectangular tunnel",
+    "Rotating Laser Dots",
+    "Scanner lines",
+    "Scanner windmill",
+    "Screen X",
+    "Starfield",
+    "Stepping scanner",
+    "WaterRipples",
+    "WavefrontScanner",
+    "Waving Line",
+    "Wild Shot",
+    "XRotator",
+]
+
+[Mix.effect_weights]
+"Boxy sensation" = 10
+"Circle tunnel" = 10
+"Classic horizontal scan line" = 10
+"ColorfulTube" = 10
+"Dancing Gobo" = 10
+"Double vertical scan lines" = 10
+"Duo triangles" = 10
+"Duo tunnel" = 10
+"Electric Arc" = 10
+"FireflySwarm" = 10
+"Flash" = 10
+"Flash wipe" = 10
+"Flash wipe 2" = 10
+"Hex Tunnel" = 10
+"Kaleidoscope" = 10
+"Laser Planets" = 10
+"Moonflower" = 10
+"MovingHeads" = 10
+"Orbital Rings" = 10
+"Orbiting Satellites" = 10
+"Pixel Explosion" = 10
+"Quadro Shapes" = 10
+"Radar sweep" = 10
+"Rectangular tunnel" = 10
+"Rotating Laser Dots" = 10
+"Scanner lines" = 10
+"Scanner windmill" = 10
+"Screen X" = 10
+"Starfield" = 10
+"Stepping scanner" = 10
+"WaterRipples" = 10
+"WavefrontScanner" = 10
+"Waving Line" = 10
+"Wild Shot" = 10
+"XRotator" = 10
+
+[Particles]
+sensitivity = 120
+brightness = 100
+flash_threshold = 90
+effect_period = 8.0
+star_spacing = 55
+max_active = 1
+effects = [
+    "FireflySwarm",
+    "Pixel Explosion",
+    "Starfield",
+    "Wild Shot",
+    "FlashyDots",
+    "PixelRain",
+    "Point cloud lasers",
+    "DiscoBall",
+
+]
+
+[Particles.effect_weights]
+"FireflySwarm" = 10
+"Pixel Explosion" = 10
+"Starfield" = 10
+"Wild Shot" = 10
+"FlashyDots" = 10
+"PixelRain" = 10
+"Point cloud lasers" = 10
+"DiscoBall" = 10
+
+[Flashes]
+sensitivity = 100
+brightness = 100
+flash_threshold = 100
+effect_period = 1
+star_spacing = 50
+max_active = 2
+effects = [
+    "Beat Strobe",
+    "Flash",
+    "Flash wipe",
+    "Flash wipe 2",
+]
+
+[Flashes.effect_weights]
+"Beat Strobe" = 50
+"Flash" = 30
+"Flash wipe" = 20
+"Flash wipe 2" = 10

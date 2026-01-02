@@ -1,0 +1,19 @@
+# Exclude List - Groups of effects that should not play together
+# Each group is a list of effect names that conflict with each other.
+# Only one effect from each group can be active at a time.
+
+# Flash and strobe effects that are too intense when combined
+flash_effects = [
+    "Beat Strobe",
+    "Flash wipe",
+    "Flash wipe 2",
+    "FlashyDots",
+    "FlashyHoles"
+]
+
+# Derby and disco light effects that overlap visually
+derby_effects = [
+    "DerbyLights",
+    "Moonflower",
+    "DiscoBall"
+]

@@ -1,0 +1,26 @@
+{
+    "-CFG_NAME-": "burned_dream_of_varnish",
+    "-ICON_SET-": "lucide",
+    "-ICON_NAME-": "projector",
+    "-ICON_SIZE-": [
+        256,
+        256
+    ],
+    "-FONT_S-": 155,
+    "-FONT_COLOR-": [
+        "#24244c",
+        255
+    ],
+    "-OUTLINE_COLOR-": [
+        "#660066",
+        255
+    ],
+    "-OUTLINE_W-": 24,
+    "-BACKGROUND_COLOR-": [
+        "#63d0ff",
+        255
+    ],
+    "-BACKGROUND_R-": 128,
+    "-POSTFIX-": "regular",
+    "-EXPORT_AS-": "PNG"
+}
