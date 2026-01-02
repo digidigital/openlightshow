@@ -2,6 +2,8 @@
 
 A music-reactive lightshow application with 50+ visual effects built with PySide6. Transform your music into stunning visualizations with real-time audio analysis and beat detection.
 
+Effect preview on [YouTube](https://youtu.be/jf2aq04m4Lg?si=u18eDf1OWQ_chyb_)
+
 ![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
