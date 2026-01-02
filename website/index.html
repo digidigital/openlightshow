@@ -689,7 +689,7 @@ openlightshow</code></pre>
             <div class="prompt-box">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <div class="prompt-label">🤖 AI Prompt for Creating New Effects</div>
-                    <button onclick="copyPromptToClipboard()" style="background: var(--accent); color: var(--bg-primary); border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: all 0.3s;">
+                    <button onclick="copyPromptToClipboard(event)" style="background: var(--accent); color: var(--bg-primary); border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: all 0.3s;">
                         📋 Copy to Clipboard
                     </button>
                 </div>
@@ -952,9 +952,9 @@ effects = [
             <p>We are grateful to the open-source community and the developers of these excellent libraries. Without their work, OpenLightShow would not be possible.</p>
 
             <div style="margin-top: 30px;">
-                <a href="https://github.com/digidigital/openlightshow" class="btn">View on GitHub</a>
-                <a href="https://github.com/digidigital/openlightshow/issues" class="btn btn-secondary">Report Issue</a>
-                <a href="https://github.com/digidigital/openlightshow/releases" class="btn btn-secondary">Download</a>
+                <a href="https://github.com/digidigital/openlightshow" class="btn" target="_blank">View on GitHub</a>
+                <a href="https://github.com/digidigital/openlightshow/issues" class="btn btn-secondary" target="_blank">Report Issue</a>
+                <a href="https://github.com/digidigital/openlightshow/releases" class="btn btn-secondary" target="_blank">Download</a>
             </div>
         </section>
     </div>
@@ -1053,22 +1053,55 @@ effects = [
         }
 
         // Copy AI Prompt to Clipboard
-        function copyPromptToClipboard() {
+        function copyPromptToClipboard(event) {
             const promptText = document.getElementById('aiPrompt').textContent;
-            navigator.clipboard.writeText(promptText).then(() => {
-                // Visual feedback
-                const button = event.target;
+            const button = event.currentTarget;
+
+            // Try to copy to clipboard
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(promptText).then(() => {
+                    // Visual feedback - success
+                    const originalText = button.innerHTML;
+                    button.innerHTML = '✓ Copied!';
+                    button.style.background = '#4ade80';
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.style.background = 'var(--accent)';
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Clipboard error:', err);
+                    fallbackCopyToClipboard(promptText, button);
+                });
+            } else {
+                // Fallback for older browsers
+                fallbackCopyToClipboard(promptText, button);
+            }
+        }
+
+        // Fallback copy method for browsers without Clipboard API
+        function fallbackCopyToClipboard(text, button) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+
+            try {
+                document.execCommand('copy');
                 const originalText = button.innerHTML;
                 button.innerHTML = '✓ Copied!';
-                button.style.background = 'var(--accent-dim)';
+                button.style.background = '#4ade80';
                 setTimeout(() => {
                     button.innerHTML = originalText;
                     button.style.background = 'var(--accent)';
                 }, 2000);
-            }).catch(err => {
+            } catch (err) {
+                console.error('Fallback copy failed:', err);
                 alert('Failed to copy to clipboard. Please copy manually.');
-                console.error('Clipboard error:', err);
-            });
+            } finally {
+                document.body.removeChild(textArea);
+            }
         }
 
         // Theme Toggle (session-only, no storage)
