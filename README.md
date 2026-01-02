@@ -179,6 +179,7 @@ The application uses `librosa` for audio analysis:
 ## Creating Custom Effects
 
 OpenLightShow uses a **fully modular plugin-based architecture**. Effects are auto-discovered from the `effects/` directory - just drop in a new file and it's automatically loaded!
+Follow the instruction in next section or **just copy the AI-prompt** from the [Project Website](https://openlightshow.digidigital.de) in order to create your own effects!
 
 ### Quick Effect Creation (3 Steps)
 
