@@ -1,6 +1,6 @@
 # OpenLightShow
 
-A music-reactive beamer lightshow application with 50+ visual effects built with PySide6. Transform your music into stunning visualizations with real-time audio analysis and beat detection.
+A music-reactive beamer lightshow application with 50+ visual effects built with Python. Transform your music into stunning visualizations with audio analysis and beat detection.
 
 1. Add a MP3 to your playlist
 2. Generate (a lot of) stage smoke
