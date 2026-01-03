@@ -5,7 +5,7 @@ A music-reactive beamer lightshow application with 50+ visual effects built with
 1. Add a MP3 to your playlist
 2. Generate (a lot of) stage smoke
 3. Point your beamer / projector in the direction of your audience
-4. Start the anmimation
+4. Start the animation
 5. Enjoy! 🙋‍♀️🙌🙋🙌🙋‍♂️
 
 Effect preview on [YouTube](https://youtu.be/jf2aq04m4Lg?si=u18eDf1OWQ_chyb_)
