@@ -26,7 +26,7 @@ from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 
 # ---------- Version ----------
 
-VERSION = "v1.0.1"
+VERSION = "v1.0.2"
 GITHUB_REPO = "digidigital/openlightshow"  
 
 
