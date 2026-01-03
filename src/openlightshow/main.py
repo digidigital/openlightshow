@@ -35,15 +35,17 @@ GITHUB_REPO = "digidigital/openlightshow"
 def get_resource_path(relative_path):
     """
     Get absolute path to resource, works for dev and for PyInstaller.
-
-    When running as a PyInstaller bundle, resources are extracted to sys._MEIPASS.
-    During development, resources are relative to this file.
     """
+
     if getattr(sys, 'frozen', False):
-        # Running as compiled executable
-        base_path = Path(sys._MEIPASS)
+        # One-file: _MEIPASS exists
+        if hasattr(sys, '_MEIPASS'):
+            base_path = Path(sys._MEIPASS)
+        else:
+            # One-folder: resources are next to the executable
+            base_path = Path(sys.executable).parent
     else:
-        # Running in development
+        # Development mode
         base_path = Path(__file__).parent
 
     return base_path / relative_path
