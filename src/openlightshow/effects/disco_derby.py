@@ -112,11 +112,10 @@ class DiscoDerby(Effect):
 
     def paint(self, p: QPainter, brightness: float):
         """Paint the moving rectangles."""
-        p.save()
-
         if not self.animation_active:
-            p.restore()
             return
+
+        p.save()
 
         # Ensure dimensions are valid - recalculate if size changed
         if self.rect_width != self.size.width() // self.NUM_RECTANGLES:

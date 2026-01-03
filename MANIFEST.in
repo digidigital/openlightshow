@@ -4,7 +4,7 @@ include LICENSE
 include Implementation_guide.md
 include QUICK_START.md
 include BUILD_INSTRUCTIONS.md
-include PACKAGE_SUMMARY.md
+
 
 # Include requirements files
 include requirements.txt
@@ -26,9 +26,6 @@ include src/openlightshow/icons/*.ifg
 # Exclude compiled Python files
 global-exclude __pycache__
 global-exclude *.py[co]
-
-# Exclude archive directory
-prune archive
 
 # Exclude website
 prune website

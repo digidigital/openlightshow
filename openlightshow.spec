@@ -67,8 +67,11 @@ hiddenimports = [
 binaries = []
 
 # Analysis
+# NOTE: We use openlightshow_launcher.py instead of __main__.py to avoid
+# "attempted relative import with no parent package" error.
+# The launcher uses absolute imports which work correctly with PyInstaller.
 a = Analysis(
-    [str(src_dir / '__main__.py')],
+    [str(project_root / 'openlightshow_launcher.py')],
     pathex=[str(project_root / 'src')],
     binaries=binaries,
     datas=datas,

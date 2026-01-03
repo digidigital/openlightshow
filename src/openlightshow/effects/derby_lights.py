@@ -190,11 +190,10 @@ class DerbyLightsEffect(Effect):
 
     def paint(self, p: QPainter, brightness: float):
         """Render the derby lights spots."""
-        p.save()
-
         if not self.flash_on:
-            p.restore()
             return
+
+        p.save()
 
         w, h = self.size.width(), self.size.height()
         orbit_radius = min(w, h) * 0.15

@@ -22,14 +22,24 @@ This document describes how to build standalone executables for OpenLightShow us
 The OpenLightShow codebase is **PyInstaller-safe**:
 
 ✅ **No multiprocessing** - Uses single-process architecture with Qt event loop
-✅ **No threading** - Uses Qt's QTimer for async operations
+✅ **Safe threading** - Uses QThread for audio analysis only (thread-safe with signals/slots)
 ✅ **Resource path handling** - Uses `get_resource_path()` helper for frozen executables
 ✅ **Dynamic imports** - Effect loader uses proper module discovery
 ✅ **All assets bundled** - TOML configs, icons, and effects included in spec file
 
 ### Key PyInstaller Adaptations
 
-1. **Resource Path Helper** (`main.py` and `effect_loader.py`):
+1. **Dedicated Launcher Script** (`openlightshow_launcher.py`):
+   - Uses absolute imports instead of relative imports
+   - Avoids "attempted relative import with no parent package" error
+   - Entry point for PyInstaller builds
+   ```python
+   from openlightshow.main import main
+   if __name__ == "__main__":
+       main()
+   ```
+
+2. **Resource Path Helper** (`main.py` and `effect_loader.py`):
    ```python
    def get_resource_path(relative_path):
        if getattr(sys, 'frozen', False):
@@ -39,7 +49,7 @@ The OpenLightShow codebase is **PyInstaller-safe**:
        return base_path / relative_path
    ```
 
-2. **All resource loading uses the helper**:
+3. **All resource loading uses the helper**:
    - TOML configuration files
    - Icon files
    - Effect modules directory

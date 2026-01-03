@@ -6,6 +6,8 @@ import time
 import tomllib
 import urllib.request
 import json
+import pickle
+import hashlib
 from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Optional, Dict, Tuple
@@ -24,8 +26,8 @@ from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 
 # ---------- Version ----------
 
-VERSION = "v1.0.0"
-GITHUB_REPO = "digidigital/openlightshow"  # Replace with actual repo
+VERSION = "v1.0.1"
+GITHUB_REPO = "digidigital/openlightshow"  
 
 
 # ---------- PyInstaller Resource Path Helper ----------
@@ -66,6 +68,122 @@ class VersionChecker(QThread):
         except Exception:
             # Silently fail - don't display anything if we can't connect
             pass
+
+
+# ---------- Audio Cache Manager ----------
+
+class AudioCacheManager:
+    """Manages cached audio analysis data to speed up loading."""
+
+    def __init__(self):
+        # Cache directory in user's home folder
+        cache_dir = Path.home() / '.openlightshow' / 'cache'
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        self.cache_dir = cache_dir
+
+    def _get_cache_key(self, file_path: str) -> Optional[str]:
+        """Generate cache key from file path and modification time."""
+        path_obj = Path(file_path)
+        if not path_obj.exists():
+            return None
+
+        # Include file size and mtime for invalidation
+        stat = path_obj.stat()
+        cache_input = f"{path_obj.absolute()}_{stat.st_size}_{stat.st_mtime}"
+        return hashlib.md5(cache_input.encode()).hexdigest()
+
+    def get_cached(self, file_path: str):
+        """Retrieve cached analysis if available and valid."""
+        cache_key = self._get_cache_key(file_path)
+        if not cache_key:
+            return None
+
+        cache_file = self.cache_dir / f"{cache_key}.pkl"
+        if not cache_file.exists():
+            return None
+
+        try:
+            with open(cache_file, 'rb') as f:
+                analysis = pickle.load(f)
+            # Update path in case file was moved
+            analysis.path = file_path
+            return analysis
+        except Exception as e:
+            print(f"Failed to load cache for {file_path}: {e}")
+            return None
+
+    def save_cached(self, analysis):
+        """Save analysis to cache."""
+        cache_key = self._get_cache_key(analysis.path)
+        if not cache_key:
+            return
+
+        cache_file = self.cache_dir / f"{cache_key}.pkl"
+        try:
+            with open(cache_file, 'wb') as f:
+                pickle.dump(analysis, f, protocol=pickle.HIGHEST_PROTOCOL)
+        except Exception as e:
+            print(f"Failed to save cache for {analysis.path}: {e}")
+
+    def clear_cache(self):
+        """Delete all cached analysis files."""
+        for cache_file in self.cache_dir.glob("*.pkl"):
+            try:
+                cache_file.unlink()
+            except Exception as e:
+                print(f"Failed to delete cache file {cache_file}: {e}")
+
+
+# ---------- Audio Preprocessing Worker Thread ----------
+
+class AudioPreprocessWorker(QThread):
+    """Background thread worker for preprocessing audio files and caching results."""
+
+    # Signals
+    progress_update = Signal(str, int, int)  # message, current, total
+    file_completed = Signal(str, object)  # file_path, TrackAnalysis
+    all_complete = Signal()
+
+    def __init__(self, file_paths: List[str], cache_manager: AudioCacheManager, parent=None):
+        super().__init__(parent)
+        self.file_paths = file_paths
+        self.cache_manager = cache_manager
+        self._stop_requested = False
+
+    def stop(self):
+        """Request the worker to stop processing."""
+        self._stop_requested = True
+
+    def run(self):
+        """Process all files in the queue."""
+        total = len(self.file_paths)
+
+        for idx, file_path in enumerate(self.file_paths):
+            if self._stop_requested:
+                break
+
+            # Check if already cached
+            cached = self.cache_manager.get_cached(file_path)
+            if cached:
+                self.progress_update.emit(f"Loaded from cache: {Path(file_path).name}", idx + 1, total)
+                self.file_completed.emit(file_path, cached)
+                continue
+
+            # Analyze the file
+            try:
+                self.progress_update.emit(f"Analyzing: {Path(file_path).name}", idx + 1, total)
+                analysis = analyze_track(file_path)
+
+                # Cache the result
+                self.cache_manager.save_cached(analysis)
+
+                self.file_completed.emit(file_path, analysis)
+            except Exception as e:
+                print(f"Failed to preprocess {file_path}: {e}")
+                self.progress_update.emit(f"Failed: {Path(file_path).name}", idx + 1, total)
+
+        if not self._stop_requested:
+            self.all_complete.emit()
 
 
 # ---------- Audio analysis ----------
@@ -139,6 +257,90 @@ def load_presets() -> Dict[str, Dict]:
     except Exception as e:
         print(f"Error loading presets: {e}")
         return {}
+
+# ---------- Audio Analysis Worker Thread ----------
+
+class AudioAnalysisWorker(QThread):
+    """Background thread worker for analyzing audio tracks without freezing the UI."""
+
+    # Signals to communicate with the main thread
+    progress_update = Signal(str)  # Status message
+    partial_analysis = Signal(object)  # Partial TrackAnalysis object (streaming)
+    analysis_complete = Signal(object)  # Complete TrackAnalysis object
+    analysis_failed = Signal(str)  # Error message
+
+    def __init__(self, file_path: str, cache_manager: AudioCacheManager = None, parent=None):
+        super().__init__(parent)
+        self.file_path = file_path
+        self.cache_manager = cache_manager
+
+    def run(self):
+        """Run the audio analysis in the background thread with streaming updates."""
+        try:
+            # Stage 1: Load audio file
+            self.progress_update.emit(f"Loading audio file...")
+            y, sr = librosa.load(self.file_path, sr=44100, mono=True)
+            duration_ms = int((len(y) / sr) * 1000)
+
+            # Stage 2: Quick STFT analysis - emit partial result immediately
+            self.progress_update.emit(f"Analyzing frequencies...")
+            S = np.abs(librosa.stft(y, n_fft=2048, hop_length=512))
+            freqs = librosa.fft_frequencies(sr=sr, n_fft=2048)
+            times = librosa.frames_to_time(np.arange(S.shape[1]), sr=sr, hop_length=512)
+            frame_times_ms = (times * 1000.0).astype(np.int64)
+
+            def band_mask(low_hz: float, high_hz: float):
+                return (freqs >= low_hz) & (freqs < high_hz)
+
+            def norm_energy(mask):
+                band = S[mask, :]
+                energy = band.mean(axis=0)
+                return energy / energy.max() if energy.max() > 0 else energy
+
+            band_energy = {
+                'low': norm_energy(band_mask(20, 200)),
+                'mid': norm_energy(band_mask(200, 2000)),
+                'high': norm_energy(band_mask(2000, 8000)),
+            }
+
+            # Emit partial analysis with frequency data but empty beats
+            # This allows the lightshow to start immediately with frequency-reactive effects
+            partial = TrackAnalysis(
+                path=self.file_path,
+                duration_ms=duration_ms,
+                beat_times_ms=[],  # No beats yet
+                band_energy=band_energy,
+                frame_times_ms=frame_times_ms
+            )
+            self.partial_analysis.emit(partial)
+            self.progress_update.emit(f"Effects started, detecting beats...")
+
+            # Stage 3: Beat detection (slower part)
+            onset_env = librosa.onset.onset_strength(y=y, sr=sr)
+            _, beat_frames = librosa.beat.beat_track(y=y, sr=sr, onset_envelope=onset_env)
+            beat_times = librosa.frames_to_time(beat_frames, sr=sr)
+            beat_times_ms = [int(t * 1000) for t in beat_times]
+
+            # Emit complete analysis with beats
+            complete = TrackAnalysis(
+                path=self.file_path,
+                duration_ms=duration_ms,
+                beat_times_ms=beat_times_ms,
+                band_energy=band_energy,
+                frame_times_ms=frame_times_ms
+            )
+
+            # Cache the complete analysis
+            if self.cache_manager:
+                self.cache_manager.save_cached(complete)
+
+            self.progress_update.emit(f"Analysis complete!")
+            self.analysis_complete.emit(complete)
+
+        except Exception as e:
+            error_msg = f"Failed to analyze track: {str(e)}"
+            self.analysis_failed.emit(error_msg)
+
 
 def load_exclude_list() -> Dict[str, list]:
     """Load exclude list from exclude_list.toml file."""
@@ -477,6 +679,20 @@ class MainWindow(QMainWindow):
 
         # Load presets from TOML file
         self.presets = load_presets()
+
+        # Audio cache manager
+        self.cache_manager = AudioCacheManager()
+
+        # Audio analysis worker thread
+        self.analysis_worker = None
+
+        # Audio preprocessing worker thread
+        self.preprocess_worker = None
+        self.preprocessed_cache = {}  # file_path -> TrackAnalysis
+
+        # Create status bar
+        self.status_bar = self.statusBar()
+        self.status_bar.showMessage("Ready")
 
         central = QWidget(self)
         self.setCentralWidget(central)
@@ -838,9 +1054,17 @@ class MainWindow(QMainWindow):
             self.settings.setValue("last_music_folder", folder)
             self.save_settings()
 
+            # Start preprocessing this file in the background
+            self.start_preprocessing([path])
+
     def remove_selected(self):
         for it in self.playlist.selectedItems():
+            file_path = it.text()
             self.playlist.takeItem(self.playlist.row(it))
+
+            # Clean up cached data for this file
+            self.clean_file_cache(file_path)
+
         self.save_settings()
 
     def play_selected(self):
@@ -872,11 +1096,36 @@ class MainWindow(QMainWindow):
                 self.play_selected()
             return
 
+        # Set source but don't play yet - wait for analysis
+        # This prevents audio stutter during initial file load
         self.player.setSource(QUrl.fromLocalFile(path))
-        self.player.play()
-        analysis = analyze_track(path)
-        self.lightshow.set_analysis(analysis)
-        self.lightshow.start()
+
+        # Check if we have preprocessed/cached data
+        cached_analysis = self.preprocessed_cache.get(path) or self.cache_manager.get_cached(path)
+
+        if cached_analysis:
+            # Use cached data - instant playback!
+            self.status_bar.showMessage(f"Playing (from cache): {os.path.basename(path)}")
+            self.player.play()
+            self.lightshow.set_analysis(cached_analysis)
+            self.lightshow.start()
+        else:
+            # Start background analysis to avoid UI freeze
+            self.status_bar.showMessage(f"Loading audio: {os.path.basename(path)}...")
+
+            # Cancel any existing analysis worker
+            if self.analysis_worker and self.analysis_worker.isRunning():
+                self.analysis_worker.quit()
+                self.analysis_worker.wait()
+
+            # Create and start new analysis worker
+            # Music will start in on_partial_analysis() when first data is ready
+            self.analysis_worker = AudioAnalysisWorker(path, self.cache_manager, parent=self)
+            self.analysis_worker.progress_update.connect(self.on_analysis_progress)
+            self.analysis_worker.partial_analysis.connect(self.on_partial_analysis)
+            self.analysis_worker.analysis_complete.connect(self.on_analysis_complete)
+            self.analysis_worker.analysis_failed.connect(self.on_analysis_failed)
+            self.analysis_worker.start()
 
     def pause_playback(self):
         """Toggle between pause and resume."""
@@ -887,6 +1136,84 @@ class MainWindow(QMainWindow):
 
     def stop_playback(self):
         self.player.stop()
+
+    def on_analysis_progress(self, message: str):
+        """Update status bar with analysis progress."""
+        self.status_bar.showMessage(message)
+
+    def on_partial_analysis(self, analysis: TrackAnalysis):
+        """Handle partial audio analysis - start playback and effects with frequency data."""
+        # Now that we have initial analysis data, start playing the music
+        self.player.play()
+
+        # Start effects with frequency-reactive behavior
+        self.lightshow.set_analysis(analysis)
+        self.lightshow.start()
+
+        # Continue showing progress in status bar
+        # (analysis_complete will update it when beats are ready)
+
+    def on_analysis_complete(self, analysis: TrackAnalysis):
+        """Handle complete audio analysis - update with beat detection."""
+        self.lightshow.set_analysis(analysis)
+        # Lightshow is already started by partial_analysis, just update the data
+        filename = os.path.basename(analysis.path)
+        self.status_bar.showMessage(f"Ready - Playing: {filename}", 5000)
+
+    def on_analysis_failed(self, error_message: str):
+        """Handle audio analysis failure - still play music without effects."""
+        self.status_bar.showMessage(f"Analysis failed: {error_message} - Playing without effects", 10000)
+        print(f"Audio analysis error: {error_message}")
+
+        # Still play the music even if analysis failed
+        self.player.play()
+
+    def start_preprocessing(self, file_paths: List[str]):
+        """Start preprocessing audio files in the background."""
+        if not file_paths:
+            return
+
+        # Stop existing preprocessing worker if running
+        if self.preprocess_worker and self.preprocess_worker.isRunning():
+            self.preprocess_worker.stop()
+            self.preprocess_worker.wait()
+
+        # Create and start new worker
+        self.preprocess_worker = AudioPreprocessWorker(file_paths, self.cache_manager, parent=self)
+        self.preprocess_worker.progress_update.connect(self.on_preprocess_progress)
+        self.preprocess_worker.file_completed.connect(self.on_preprocess_file_complete)
+        self.preprocess_worker.all_complete.connect(self.on_preprocess_all_complete)
+        self.preprocess_worker.start()
+
+    def on_preprocess_progress(self, message: str, current: int, total: int):
+        """Handle preprocessing progress updates."""
+        self.status_bar.showMessage(f"Preprocessing ({current}/{total}): {message}")
+
+    def on_preprocess_file_complete(self, file_path: str, analysis):
+        """Handle completion of a single file preprocessing."""
+        # Store in memory cache for instant access
+        self.preprocessed_cache[file_path] = analysis
+
+    def on_preprocess_all_complete(self):
+        """Handle completion of all preprocessing."""
+        self.status_bar.showMessage("All files preprocessed and ready", 3000)
+
+    def clean_file_cache(self, file_path: str):
+        """Remove cached data for a specific file."""
+        # Remove from in-memory cache
+        if file_path in self.preprocessed_cache:
+            del self.preprocessed_cache[file_path]
+
+        # Remove from disk cache
+        cache_key = self.cache_manager._get_cache_key(file_path)
+        if cache_key:
+            cache_file = self.cache_manager.cache_dir / f"{cache_key}.pkl"
+            if cache_file.exists():
+                try:
+                    cache_file.unlink()
+                    print(f"Deleted cache file for: {file_path}")
+                except Exception as e:
+                    print(f"Failed to delete cache file for {file_path}: {e}")
 
     def on_playback_state(self, state):
         self.lightshow.is_playing = (state == QMediaPlayer.PlayingState)
@@ -1076,6 +1403,7 @@ class MainWindow(QMainWindow):
         # Load playlist - only add files that still exist
         saved_playlist = self.settings.value("playlist", [])
         # Handle QSettings quirk: single-item lists may be returned as strings
+        valid_files = []
         if saved_playlist:
             if isinstance(saved_playlist, str):
                 saved_playlist = [saved_playlist]
@@ -1083,9 +1411,14 @@ class MainWindow(QMainWindow):
                 # Only add files that still exist
                 if os.path.isfile(path):
                     self.playlist.addItem(QListWidgetItem(path))
+                    valid_files.append(path)
 
         # Clear the loading flag now that we're done
         self._loading_settings = False
+
+        # Start preprocessing all playlist files in the background
+        if valid_files:
+            self.start_preprocessing(valid_files)
 
     def on_new_version_available(self, latest_version: str):
         """Called when a new version is available on GitHub."""
@@ -1095,6 +1428,22 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         # Save settings before closing
         self.save_settings()
+
+        # Stop and wait for analysis worker thread
+        try:
+            if self.analysis_worker and self.analysis_worker.isRunning():
+                self.analysis_worker.quit()
+                self.analysis_worker.wait(2000)  # Wait up to 2 seconds
+        except Exception:
+            pass
+
+        # Stop and wait for preprocessing worker thread
+        try:
+            if self.preprocess_worker and self.preprocess_worker.isRunning():
+                self.preprocess_worker.stop()
+                self.preprocess_worker.wait(2000)  # Wait up to 2 seconds
+        except Exception:
+            pass
 
         try:
             self.effect_rotation_timer.stop()
@@ -1121,13 +1470,22 @@ def main():
 
     win = MainWindow()
 
-    # Get the primary screen and resize to its available geometry
-    primary_screen = app.primaryScreen()
-    if primary_screen:
-        screen_geometry = primary_screen.availableGeometry()
-        win.setGeometry(screen_geometry)
-
+    # Maximize the window properly (respects taskbar on all platforms)
+    # Show the window first as a normal window
     win.show()
+
+    # Defer maximization using QTimer to ensure event loop is running
+    # This is especially important on Ubuntu/GNOME where the window manager
+    # may delay maximization until the window is fully initialized
+    def do_maximize():
+        win.setWindowState(Qt.WindowMaximized)
+        win.showMaximized()
+        win.activateWindow()
+        win.raise_()
+
+    # Execute maximization after event loop starts (0ms delay)
+    QTimer.singleShot(0, do_maximize)
+
     sys.exit(app.exec())
 
 
