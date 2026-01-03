@@ -26,7 +26,7 @@ from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 
 # ---------- Version ----------
 
-VERSION = "v1.0.2"
+VERSION = "v1.0.3"
 GITHUB_REPO = "digidigital/openlightshow"  
 
 
@@ -606,31 +606,42 @@ class LightshowWidget(QWidget):
 
     def paintEvent(self, event):
         p = QPainter(self)
-        p.setRenderHint(QPainter.Antialiasing, True)
-        p.fillRect(self.rect(), Qt.black)
-        if self.is_playing:
-            for e in self.effects_active:
-                e.paint(p, self.brightness)
-        p.end()
+        try:
+            p.setRenderHint(QPainter.Antialiasing, True)
+            p.fillRect(self.rect(), Qt.black)
+            if self.is_playing:
+                for e in self.effects_active:
+                    try:
+                        e.paint(p, self.brightness)
+                    except Exception as ex:
+                        # Silently catch paint errors to prevent crashes
+                        print(f"Error painting effect {e.name}: {ex}")
+        finally:
+            p.end()
 
     def render_to_painter(self, painter: QPainter, target_rect: QRectF):
         """Render the lightshow to a given painter and rectangle (for preview)."""
         painter.save()
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.fillRect(target_rect, Qt.black)
+        try:
+            painter.setRenderHint(QPainter.Antialiasing, True)
+            painter.fillRect(target_rect, Qt.black)
 
-        # Scale and translate to fit target rectangle
-        scale_x = target_rect.width() / self.width() if self.width() > 0 else 1.0
-        scale_y = target_rect.height() / self.height() if self.height() > 0 else 1.0
+            # Scale and translate to fit target rectangle
+            scale_x = target_rect.width() / self.width() if self.width() > 0 else 1.0
+            scale_y = target_rect.height() / self.height() if self.height() > 0 else 1.0
 
-        painter.translate(target_rect.x(), target_rect.y())
-        painter.scale(scale_x, scale_y)
+            painter.translate(target_rect.x(), target_rect.y())
+            painter.scale(scale_x, scale_y)
 
-        if self.is_playing:
-            for e in self.effects_active:
-                e.paint(painter, self.brightness)
-
-        painter.restore()
+            if self.is_playing:
+                for e in self.effects_active:
+                    try:
+                        e.paint(painter, self.brightness)
+                    except Exception as ex:
+                        # Silently catch paint errors to prevent crashes
+                        print(f"Error painting effect {e.name}: {ex}")
+        finally:
+            painter.restore()
 
 
 # ---------- Preview widget ----------
