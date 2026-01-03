@@ -704,6 +704,8 @@ Because of this setup, the application only needs to draw what a laser would pro
 
 Your task is to generate a new visual effect by drawing shapes, lines, or points on the 2D canvas that will translate into convincing laser‑like visuals when projected through smoke.
 
+Remember: Don't draw beams or devices (We emulate the devices and the beams are created by light passing though the smoke) - Draw the effect's 2D projection only!
+
 The effect should:
 
 1. Inherit from the Effect base class located at `from ..effect_base import Effect`
@@ -738,8 +740,10 @@ class YourEffect(Effect):
         # Update animation state based on time and audio
 
     def paint(self, painter: QPainter, brightness: float):
+        painter.save()    
         # brightness: 0.1-2.0 (overall brightness multiplier)
-        # Draw your effect using QPainter methods
+        # Draw your effect using QPainter methods here
+        painter.restore()
 
     def on_beat(self):
         # Optional: triggered on detected beats - (add some ms debounce / cool down)  
