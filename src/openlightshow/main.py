@@ -38,12 +38,7 @@ def get_resource_path(relative_path):
     """
 
     if getattr(sys, 'frozen', False):
-        # One-file: _MEIPASS exists
-        if hasattr(sys, '_MEIPASS'):
-            base_path = Path(sys._MEIPASS)
-        else:
-            # One-folder: resources are next to the executable
-            base_path = Path(sys.executable).parent
+        base_path = Path(sys._MEIPASS) / "openlightshow"
     else:
         # Development mode
         base_path = Path(__file__).parent
