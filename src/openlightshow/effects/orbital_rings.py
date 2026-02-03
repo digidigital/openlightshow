@@ -99,7 +99,7 @@ class OrbitalRings(Effect):
         cx, cy = w / 2, h / 2
 
         # Calculate line width based on bass energy
-        base_width = 2.0
+        base_width = 4.0
         line_width = base_width + (self.bass_energy * 8.0)
 
         for ring in self.rings:

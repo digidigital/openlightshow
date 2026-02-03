@@ -48,7 +48,7 @@ class MovingBeam:
 
 class MovingHeadsEffect(Effect):
     name = "MovingHeads"
-    effect_class = "movingheadseffect_class01"
+    effect_class = "particle_class01"
 
     def __init__(self, size: QSize):
         super().__init__(size)

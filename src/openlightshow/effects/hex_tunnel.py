@@ -14,7 +14,7 @@ class HexTunnel(Effect):
     A hexagon outline with each segment colored; colors randomize on beats.
     """
     name = "Hex Tunnel"
-    effect_class = "centereffect_class06"
+    effect_class = "centereffect_class03"
 
     def __init__(self, size: QSize):
         self.size = size

@@ -73,7 +73,7 @@ class PixelExplosion(Effect):
 
         # Create 4x4 grid of pixels (16 pixels total)
         pixels = []
-        pixel_size = 4  # 4x4 pixels
+        pixel_size = 8  # 8x8 pixels
 
         # High explosion speed
         base_speed = 300  # pixels per second
